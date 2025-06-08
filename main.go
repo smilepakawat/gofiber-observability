@@ -1,15 +1,7 @@
 package main
 
-import (
-    "github.com/gofiber/fiber/v2"
-)
+import "github.com/smilepakawat/gofiber-observability/cmd/api"
 
 func main() {
-    app := fiber.New()
-
-    app.Get("/", func(c *fiber.Ctx) error {
-        return c.SendString("Hello from gofiber-observability!")
-    })
-
-    app.Listen(":3000")
+	api.StartServer()
 }
