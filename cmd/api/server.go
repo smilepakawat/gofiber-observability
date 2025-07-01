@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
@@ -28,18 +29,26 @@ func initTracer(ctx context.Context) (*tracesdk.TracerProvider, error) {
 		return nil, err
 	}
 
-	tp := tracesdk.NewTracerProvider(
-		tracesdk.WithBatcher(exporter),
-		tracesdk.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceName("fiber-server"),
-			attribute.String("environment", "development"),
-		)),
+	resource := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceName("fiber-server"),
+		attribute.String("environment", "development"),
 	)
 
-	otel.SetTracerProvider(tp)
+	provider := tracesdk.NewTracerProvider(
+		tracesdk.WithBatcher(exporter),
+		tracesdk.WithResource(resource),
+		tracesdk.WithSampler(tracesdk.AlwaysSample()),
+	)
 
-	return tp, nil
+	otel.SetTracerProvider(provider)
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+		),
+	)
+
+	return provider, nil
 }
 
 func StartServer() {

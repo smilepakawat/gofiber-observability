@@ -13,7 +13,7 @@ func Route(app *fiber.App) {
 	app.Use(otelfiber.Middleware())
 
 	health := app.Group("/health")
-	health.Get("/", func(c *fiber.Ctx) error {
+	health.Get("", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status": "ok",
 			"time":   time.Now(),
